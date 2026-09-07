@@ -169,9 +169,15 @@ section.alt{background:linear-gradient(180deg,transparent,rgba(10,21,51,.5),tran
   width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:1.1rem;
   background:var(--grad-main);color:#02121f;box-shadow:var(--glow-cyan);position:relative;flex-shrink:0;
 }
+.logo-image{width:42px;height:42px;border-radius:13px;object-fit:cover;box-shadow:var(--glow-cyan);flex-shrink:0}
+.logo-image + span{font-size:.78rem;letter-spacing:1.5px;color:var(--text);font-weight:700;transform:none}
+.logo-image + span b{color:var(--cyan);font-weight:900}
 .logo-mark::after{content:"";position:absolute;inset:-4px;border-radius:16px;border:1px solid rgba(0,212,255,.35);animation:pulseRing 2.6s ease-out infinite}
 @keyframes pulseRing{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.28);opacity:0}}
 .logo b{color:var(--cyan);font-weight:900}
+.wa-brand{position:fixed;top:1rem;left:1rem;z-index:1200;display:inline-flex;align-items:center;gap:.6rem;font-family:var(--font-head);font-size:.78rem;letter-spacing:1.5px;font-weight:700;color:var(--text)}
+.wa-brand img{width:42px;height:42px;border-radius:13px;object-fit:cover;box-shadow:var(--glow-cyan)}
+.wa-brand b{color:var(--cyan)}
 .logo span{font-size:.62rem;display:block;letter-spacing:3.5px;color:var(--muted);font-weight:500;transform:translateY(-2px)}
 .nav-links{display:flex;align-items:center;gap:.2rem;list-style:none}
 .nav-links a{
@@ -602,7 +608,7 @@ section.alt{background:linear-gradient(180deg,transparent,rgba(10,21,51,.5),tran
 .customer-login-card::after{content:"";position:absolute;width:270px;height:270px;border-radius:50%;right:-145px;top:-150px;background:rgba(139,92,246,.22);filter:blur(25px);pointer-events:none}
 .login-back{position:absolute;top:1.25rem;left:1.35rem;color:var(--muted);font-size:.88rem;font-weight:600;transition:color .25s;z-index:1}
 .login-back:hover{color:var(--cyan)}
-.login-brand-mark{width:62px;height:62px;font-size:1.55rem}
+.login-brand-mark{width:62px;height:62px;font-size:1.55rem;object-fit:cover}
 .login-eyebrow{font-family:var(--font-head);font-size:.64rem;letter-spacing:2.5px;color:var(--cyan);margin-top:.55rem}
 .login-logo h1{font-family:var(--font-head);font-size:clamp(1.45rem,5vw,2rem);line-height:1.35;letter-spacing:.3px}
 .login-intro{max-width:340px;color:var(--muted);font-size:1rem;line-height:1.55}
@@ -711,7 +717,8 @@ section.alt{background:linear-gradient(180deg,transparent,rgba(10,21,51,.5),tran
   .tl{flex-wrap:wrap;gap:1.4rem 0}
   .tl-step{flex:1 1 33%;padding-top:34px}
   .project-grid{grid-template-columns:repeat(2,1fr)}
-@media(max-width:600px){
+}
+@media(max:600px){
   body{font-size:15.5px}
   .container{width:calc(100% - 16px);padding-inline:0}
   section{padding:50px 0}
@@ -817,6 +824,8 @@ html[data-theme="light"]{
   --card-bg:rgba(255,255,255,.82);
   --glass:rgba(255,255,255,.74);
   --glass-2:rgba(255,255,255,.66);
+  --field-bg:#ffffff;
+  --soft-bg:rgba(241,247,253,.9);
   --stroke:rgba(13,60,140,.16);
   --stroke-2:rgba(124,58,237,.28);
   --blue:#0369a1;
@@ -860,6 +869,9 @@ html[data-theme="light"] .modal{background:rgba(15,30,60,.42)}
 html[data-theme="light"] .modal-card{background:linear-gradient(170deg,#ffffff,#eef4fb)}
 html[data-theme="light"] .modal-head{background:rgba(255,255,255,.96)}
 html[data-theme="light"] .toast{background:rgba(255,255,255,.95)}
+html[data-theme="light"] .inp,html[data-theme="light"] .sel,html[data-theme="light"] .area{background:#fff;border-color:rgba(13,60,140,.22);box-shadow:inset 0 1px 2px rgba(15,40,80,.04)}
+html[data-theme="light"] .inp::placeholder,html[data-theme="light"] .area::placeholder{color:#7084a3}
+html[data-theme="light"] .inp:focus,html[data-theme="light"] .sel:focus,html[data-theme="light"] .area:focus{background:#fff;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(2,132,199,.14)}
 html[data-theme="light"] .login-card{background:linear-gradient(170deg,#ffffff,#eef4fb);box-shadow:0 40px 100px -30px rgba(15,40,80,.35),0 0 70px -36px rgba(2,132,199,.4)}
 html[data-theme="light"] .customer-login-card{background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(236,244,252,.97));box-shadow:0 36px 100px -32px rgba(15,40,80,.4),0 0 75px -42px rgba(2,132,199,.55)}
 html[data-theme="light"] .sidebar{background:linear-gradient(180deg,#f4f9fe,#e8f0fa);border-right-color:var(--stroke)}

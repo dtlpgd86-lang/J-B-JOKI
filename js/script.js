@@ -187,9 +187,9 @@ function injectNav() {
   }).join("");
   host.innerHTML = `
     <div class="container nav-inner">
-      <a href="index.html" class="logo" aria-label="J&B JOKI">
-        <span class="logo-mark"><i class="fa-solid fa-fish"></i></span>
-        <span>FISH <b>JOKI</b></span>
+      <a href="index.html" class="logo" aria-label="J &amp; B JOKI">
+        <img class="logo-image" src="logo.png" alt="J &amp; B JOKI">
+        <span>J &amp; B <b>JOKI</b></span>
       </a>
       <nav class="nav-scrim" id="navScrim"></nav>
       <ul class="nav-links" id="navLinks">
@@ -224,7 +224,7 @@ function injectFooter() {
     <div class="container">
       <div class="footer-grid">
         <div>
-          <a href="index.html" class="logo"><span class="logo-mark"><i class="fa-solid fa-fish"></i></span><span>FISH <b>JOKI</b></span></a>
+          <a href="index.html" class="logo"><img class="logo-image" src="logo.png" alt="J &amp; B JOKI"><span>J &amp; B <b>JOKI</b></span></a>
           <p class="brand-desc">${esc(APPCONFIG.tagline)} Jasa joki premium untuk Fisch &amp; Fish It! — cepat, aman, dan profesional.</p>
           <div class="social">
             <a href="${waLink()}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>J &amp; B JOKI — Order via WhatsApp</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body data-page="wa-order">
+  <a href="wa-index.html" class="wa-brand" aria-label="J &amp; B JOKI"><img src="../logo.png" alt="J &amp; B JOKI"><span>J &amp; B <b>JOKI</b></span></a>
+  <button class="theme-toggle fixed" aria-label="Ganti tema gelap/terang"><i class="fa-solid fa-moon"></i></button>
+  <div class="loader" id="loader">
+    <div class="loader-fish">🐟</div>
+    <div class="loader-bar"><i></i></div>
+    <div class="loader-text">J &amp; B JOKI — Menyiapkan Laut 🎣</div>
+  </div>
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <div class="crumbs reveal"><a href="wa-index.html">Home</a> <i class="fa-solid fa-chevron-right"></i>
+          <span>Order via WA</span></div>
+        <h1 class="reveal d1">Order via <span class="gtext">WhatsApp</span></h1>
+        <p class="reveal d2">Pilih layanan, isi target kamu — lalu chat WhatsApp untuk konfirmasi.</p>
+      </div>
+    </section>
+    <section style="padding-top:4px">
+      <div class="container">
+        <div class="form-grid" style="grid-template-columns:1.6fr 1fr;align-items:start">
+          <form id="waOrderForm" class="form-grid"
+            style="background:var(--card-bg);border:1px solid var(--stroke);border-radius:var(--radius-lg);padding:1.8rem;backdrop-filter:blur(10px)">
+            <div class="field full">
+              <label>1. Pilih Game<b>*</b></label>
+              <select class="sel" id="game" required>
+                <option value="">— Pilih Game —</option>
+                <option value="fisch">🐟 Fisch</option>
+                <option value="fishit">🎣 Fish It!</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>2. Pilih Layanan<b>*</b></label>
+              <select class="sel" id="service" required>
+                <option value="">— Pilih Game dulu —</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>3. Target<b>*</b></label>
+              <input class="inp" id="target" placeholder="Contoh: 1.000.000 coins / Level 75" required>
+            </div>
+            <div class="field full">
+              <label>4. Username Roblox<b>*</b></label>
+              <input class="inp" id="user" placeholder="Username Roblox kamu" required autocomplete="off">
+            </div>
+            <div class="field full">
+              <div id="previewPanel" class="est-panel" style="display:none">
+                <div class="est-price"><span class="lbl">Estimasi Harga</span><span class="num" id="estPrice">—</span>
+                </div>
+                <div class="est-row"><span class="k">Estimasi Waktu</span><span class="v" id="estTime">—</span></div>
+                <ul id="detailsList"
+                  style="list-style:none;display:flex;flex-direction:column;gap:.5rem;font-size:.94rem;color:var(--muted)">
+                </ul>
+              </div>
+            </div>
+            <div class="field full">
+              <button type="submit" class="btn btn-success btn-block" style="padding:1.05rem;font-size:1.1rem">
+                <i class="fa-brands fa-whatsapp"></i> Kirim Order via WhatsApp
+              </button>
+            </div>
+          </form>
+          <aside style="position:sticky;top:calc(var(--nav-h) + 20px)">
+            <div class="est-panel reveal" style="border-color:rgba(37,211,102,.3);background:rgba(37,211,102,.06)">
+              <div style="display:flex;gap:.8rem;align-items:flex-start;font-size:.92rem;color:var(--green)">
+                <i class="fa-brands fa-whatsapp" style="margin-top:3px;font-size:1.4rem"></i>
+                <span><b>Cara Order via WA:</b><br>1. Isi form di samping<br>2. Klik tombol hijau<br>3. Chat otomatis
+                  terbuka ke admin<br>4. Admin akan konfirmasi & instruksi pembayaran</span>
+              </div>
+            </div>
+            <div class="est-panel reveal d1" style="margin-top:1.2rem">
+              <div style="display:flex;gap:.8rem;align-items:flex-start;font-size:.92rem;color:var(--muted)">
+                <i class="fa-solid fa-shield-halved" style="margin-top:3px;font-size:1.2rem;color:var(--cyan)"></i>
+                <span><b>100% Aman</b><br>Data dikirim langsung ke WhatsApp admin — tidak disimpan di server. Kami tidak
+                  pernah minta password.</span>
+              </div>
+            </div>
+            <p class="mini-note" style="margin-top:1rem">💳 Pembayaran: <b style="color:var(--gold)">QRIS, DANA, OVO,
+                GoPay, Bank BCA/BRI</b></p>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("fj_theme")==="light"?"light":"dark")}catch(e){}</script>
+  <script src="../js/data.js"></script>
+  <script src="../js/script.js"></script>
+  <script src="wa-config.js"></script>
+  <script>
+    (function(){
+      var cfg = (typeof WACONFIG !== 'undefined') ? WACONFIG : APPCONFIG;
+      var WA_NUMBER = cfg.whatsapp || "6281229422012";
+      var gameSel = document.getElementById("game");
+      var svcSel = document.getElementById("service");
+      var targetInp = document.getElementById("target");
+      var userInp = document.getElementById("user");
+      var preview = document.getElementById("previewPanel");
+      var estPrice = document.getElementById("estPrice");
+      var estTime = document.getElementById("estTime");
+      var detailsList = document.getElementById("detailsList");
+
+      var services = cfg.services || SERVICES;
+      var gamesMeta = cfg.games || GAMES_META;
+
+      function getSvcList(game) {
+        return services[game] || [];
+      }
+
+      function calcEstimate(game, svcId, target) {
+        var svcs = getSvcList(game);
+        var svc = svcs.find(function(s){ return s.id === svcId; });
+        if (!svc) return null;
+        var num = parseInt(String(target || "").replace(/[^\d]/g, ""), 10) || 0;
+        var base = svc.price;
+        if (num > 0) {
+          var divider = cfg.targetDivider || 500000;
+          var maxFactor = cfg.maxTargetFactor || 3;
+          var factor = 1 + Math.min(num / divider, maxFactor);
+          base = svc.price * factor;
+        }
+        return { svc: svc, base: svc.price, price: Math.round(base / 5000) * 5000, est: svc.est };
+      }
+
+      function recalc() {
+        var game = gameSel.value;
+        var svcId = svcSel.value;
+        var target = targetInp.value;
+        if (!game || !svcId) {
+          preview.style.display = "none";
+          return;
+        }
+        var q = calcEstimate(game, svcId, target);
+        if (!q) { preview.style.display = "none"; return; }
+        preview.style.display = "block";
+        estPrice.textContent = "Rp " + q.price.toLocaleString("id-ID");
+        estTime.textContent = q.est;
+        detailsList.innerHTML = `
+          <li><span>Layanan</span><b>${q.svc.name}</b></li>
+          <li><span>Target</span><b>${esc(target || "—")}</b></li>
+        `;
+      }
+
+      gameSel.addEventListener("change", function(){
+        var game = gameSel.value;
+        var svcs = getSvcList(game);
+        svcSel.innerHTML = '<option value="">— Pilih Layanan —</option>' +
+          svcs.map(function(s){ return '<option value="'+s.id+'">'+s.name+' — Rp ' + s.price.toLocaleString("id-ID") + '</option>'; }).join("");
+        recalc();
+      });
+      svcSel.addEventListener("change", recalc);
+      targetInp.addEventListener("input", recalc);
+
+      // Pre-fill from URL params
+      var q = new URLSearchParams(location.search);
+      var g = q.get("game"), s = q.get("svc");
+      if (g && (g === "fisch" || g === "fishit")) {
+        gameSel.value = g;
+        gameSel.dispatchEvent(new Event("change"));
+        if (s) {
+          setTimeout(function(){
+            svcSel.value = s;
+            recalc();
+          }, 100);
+        }
+      }
+
+      // Submit — open WhatsApp
+      document.getElementById("waOrderForm").addEventListener("submit", function(e){
+        e.preventDefault();
+        if (!gameSel.value || !svcSel.value || !targetInp.value.trim() || !userInp.value.trim()) {
+          alert("Lengkapi semua data yang wajib diisi!");
+          return;
+        }
+        var gameName = gamesMeta[gameSel.value] ? gamesMeta[gameSel.value].name : gameSel.value;
+        var svcName = svcSel.options[svcSel.selectedIndex].text.split(" — ")[0];
+        var msg = "Halo J & B JOKI!%0A%0A" +
+          "Saya mau order jasa joki.%0A" +
+          "Game: " + gameName + "%0A" +
+          "Layanan: " + svcName + "%0A" +
+          "Target: " + targetInp.value.trim() + "%0A" +
+          "Username Roblox: " + userInp.value.trim() + "%0A" +
+          "Prioritas: Normal%0A" +
+          "Mohon info estimasi harga & petunjuk pembayaran. Terima kasih! 🎣";
+        var waLink = "https://wa.me/" + WA_NUMBER + "?text=" + msg;
+        window.open(waLink, "_blank");
+      });
+    })();
+  </script>
+</body>
+
+</html>
