@@ -51,8 +51,11 @@
           <button id="sideToggle" class="side-toggle" aria-label="Buka menu"><i class="fa-solid fa-bars"></i></button>
           <h2 id="viewTitle">Ringkasan Dashboard</h2>
         </div>
-        <button id="resetData" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-left"></i> Reset ke
-          Default</button>
+        <div style="display:flex;align-items:center;gap:.8rem">
+          <span id="adminRoleLabel" class="game-chip chip-fisch">Admin</span>
+          <button id="resetData" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-left"></i> Reset ke
+            Default</button>
+        </div>
       </div>
 
       <!-- VIEW: Ringkasan -->
@@ -88,7 +91,7 @@
         <div class="panel">
           <div class="panel-head">
             <h3><i class="fa-solid fa-list-check" style="color:var(--cyan)"></i> Daftar Order</h3><span
-              style="color:var(--muted);font-size:.9rem">Update status langsung dari dropdown.</span>
+              style="color:var(--muted);font-size:.9rem">Update status langsung dari dropdown. Order selesai hanya terlihat oleh Super Admin.</span>
           </div>
           <div class="table-wrap">
             <table class="a-table">

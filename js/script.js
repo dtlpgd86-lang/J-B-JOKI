@@ -48,6 +48,8 @@ const getServices = (game) => {
 const getFaqs = () => { const f = store.get(KEY.faq, null); return (f && f.length) ? f : FAQS; };
 const getTestis = () => { const t = store.get(KEY.testi, null); return (t && t.length) ? t : TESTIMONIALS; };
 let adminOrders = [];
+let adminRole = "admin";
+const isSuperAdmin = () => adminRole === "super_admin";
 const getOrders = () => PAGE === "admin" ? adminOrders : store.get(KEY.orders, []);
 const dbOrder = (row) => ({
   id: row.id, game: row.game, gameName: row.game_name, service: row.service,
@@ -61,6 +63,7 @@ async function refreshAdminOrders() {
   const { data, error } = await supabaseClient.from("orders").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   adminOrders = data.map(dbOrder);
+  if (!isSuperAdmin()) adminOrders = adminOrders.filter(order => order.status !== 4);
 }
 
 /* ---------- Toast notification ---------- */
@@ -993,7 +996,7 @@ async function guardAdmin() {
     location.replace(url.href);
     return false;
   }
-  const { data, error } = await supabaseClient.from("admin_users").select("user_id", { head: false }).eq("user_id", session.user.id).maybeSingle();
+  const { data, error } = await supabaseClient.from("admin_users").select("user_id, role", { head: false }).eq("user_id", session.user.id).maybeSingle();
   if (error || !data) {
     await supabaseClient.auth.signOut();
     const url = new URL("login.html", location.href);
@@ -1001,6 +1004,7 @@ async function guardAdmin() {
     location.replace(url.href);
     return false;
   }
+  adminRole = data.role === "super_admin" ? "super_admin" : "admin";
   return true;
 }
 
@@ -1045,7 +1049,7 @@ function orderRow(o, recent) {
       <td><select class="sel st-sel" data-id="${o.id}">${opts}</select></td>
       <td class="a-actions">
         ${o.status >= 0 && o.status <= 3 ? `<button class="icon-btn green chat-order" data-id="${o.id}" title="Chat Order"><i class="fa-solid fa-comments"></i></button>` : ""}
-        ${recent ? "" : `<button class="icon-btn red del-order" data-id="${o.id}" title="Hapus"><i class="fa-solid fa-trash"></i></button>`}
+        ${!recent && isSuperAdmin() ? `<button class="icon-btn red del-order" data-id="${o.id}" title="Hapus order"><i class="fa-solid fa-trash"></i></button>` : ""}
       </td>
     </tr>`;
 }
@@ -1290,11 +1294,14 @@ async function initAdminDashboard() {
     toast("Order tidak dapat dimuat. Periksa konfigurasi admin.", "err");
   }
   const sidebar = $(".sidebar"), main = $(".admin-main");
+  const roleLabel = $("#adminRoleLabel");
+  if (roleLabel) roleLabel.textContent = isSuperAdmin() ? "Super Admin" : "Admin";
   $("#sideToggle").addEventListener("click", () => sidebar.classList.toggle("open"));
   main.addEventListener("click", (e) => { if (window.innerWidth < 1024 && sidebar.classList.contains("open") && !e.target.closest(".sidebar")) sidebar.classList.remove("open"); });
   $$(".side-nav button").forEach(b => b.addEventListener("click", () => switchView(b.dataset.view)));
   $("#logoutBtn").addEventListener("click", () => { store.del(KEY.auth); location.href = "login.html"; });
   $("#resetData").addEventListener("click", () => {
+    if (!isSuperAdmin()) { toast("Hanya Super Admin yang boleh mereset data.", "err"); return; }
     if (!confirm("Reset semua data ke default (layanan, FAQ, testimoni, order)?")) return;
     ["fj_services", "fj_faq", "fj_testi", "fj_orders"].forEach(k => localStorage.removeItem(k));
     toast("Semua data direset ke default.", "ok");
