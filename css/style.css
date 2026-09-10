@@ -621,6 +621,14 @@ section.alt{background:linear-gradient(180deg,transparent,rgba(10,21,51,.5),tran
 .login-terms{margin-top:1.4rem;padding-top:1.25rem;border-top:1px solid rgba(0,212,255,.12);color:var(--muted-2);font-size:.78rem;line-height:1.5}
 .nav-login{color:var(--cyan);font-weight:700;font-size:.95rem;white-space:nowrap}
 .nav-login:hover{color:#fff}
+#customerAuth{display:flex;align-items:center}
+.customer-chip{display:flex;align-items:center;gap:.55rem;padding:.32rem .55rem .32rem .32rem;border:1px solid var(--stroke);border-radius:999px;background:rgba(0,212,255,.08);max-width:230px}
+.customer-chip img,.customer-chip-initial{width:30px;height:30px;border-radius:50%;flex-shrink:0}
+.customer-chip img{object-fit:cover}
+.customer-chip-initial{display:grid;place-items:center;background:linear-gradient(135deg,#00d4ff,#a855f7);color:#fff;font-weight:800;font-size:.9rem}
+.customer-chip-name{font-size:.86rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.customer-logout{border:1px solid var(--stroke);background:rgba(248,113,113,.08);color:var(--red);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:.25s;flex-shrink:0}
+.customer-logout:hover{background:rgba(248,113,113,.22);color:#fff;border-color:var(--red)}
 
 /* Admin shell */
 .admin-shell{display:grid;grid-template-columns:252px 1fr;min-height:100vh}

@@ -73,7 +73,11 @@ function toast(msg, type = "ok", ms = 3800) {
   const el = document.createElement("div");
   el.className = `toast ${type}`;
   const ic = type === "err" ? "fa-circle-exclamation" : type === "info" ? "fa-circle-info" : "fa-circle-check";
-  el.innerHTML = `<i class="fa-solid ${ic} ti"></i><span>${msg}</span>`;
+  const icon = document.createElement("i");
+  icon.className = `fa-solid ${ic} ti`;
+  const label = document.createElement("span");
+  label.textContent = String(msg ?? "");
+  el.append(icon, label);
   wrap.appendChild(el);
   setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 420); }, ms);
 }
@@ -201,7 +205,7 @@ function injectNav() {
       </ul>
       <div class="nav-right">
         <button class="theme-toggle" aria-label="Ganti tema gelap/terang"><i class="fa-solid fa-moon"></i></button>
-        <a href="login.html" class="nav-login" aria-label="Masuk"><i class="fa-solid fa-right-to-bracket"></i><span> Masuk</span></a>
+        <div id="customerAuth"><a href="login.html" class="nav-login" aria-label="Masuk"><i class="fa-solid fa-right-to-bracket"></i><span> Masuk</span></a></div>
         <a href="login.html?next=order.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-anchor"></i> Order Sekarang</a>
         <button class="ham" id="hamBtn" aria-label="Menu"><span></span><span></span><span></span></button>
       </div>
@@ -667,7 +671,8 @@ function redirectToCustomerLogin() {
   if (location.pathname.endsWith("/login.html")) return;
   const url = new URL("login.html", location.href);
   url.searchParams.set("next", "order.html");
-  location.href = url.href;
+  toast("Silakan login dengan Google terlebih dahulu untuk membuka halaman order.", "info", 3500);
+  setTimeout(() => { location.href = url.href; }, 450);
 }
 async function requireCustomerLogin() {
   if (location.pathname.endsWith("/login.html")) return true;
@@ -679,6 +684,18 @@ async function requireCustomerLogin() {
   if (session?.user) return true;
   redirectToCustomerLogin();
   return false;
+}
+async function guardOrderPage() {
+  const section = $("#order-section");
+  if (section) section.style.visibility = "hidden";
+  const isLoggedIn = await requireCustomerLogin();
+  if (!isLoggedIn) return false;
+  if (section) section.style.visibility = "";
+  bindOrderForm("");
+  supabaseClient?.auth.onAuthStateChange((_event, newSession) => {
+    if (!newSession?.user && (document.body.dataset.page === "order")) redirectToCustomerLogin();
+  });
+  return true;
 }
 async function openOrderModal(game, svcId) {
   if (!await requireCustomerLogin()) return;
@@ -939,6 +956,35 @@ function initStatusPage() {
   const params = new URLSearchParams(location.search);
   const url = params.get("id"), token = params.get("token");
   if (url && token) { $("#statusId").value = url; $("#statusToken").value = token; renderStatus(url, token, { watch: true }); }
+  loadCustomerOrderHistory();
+}
+
+async function loadCustomerOrderHistory() {
+  const panel = $("#customerOrdersPanel");
+  const body = $("#customerOrdersBody");
+  if (!panel || !body || !supabaseClient) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session?.user) return;
+  const { data, error } = await supabaseClient
+    .from("orders")
+    .select("id, game_name, service_name, target, price, status, created_at, updated_at, tracking_token")
+    .eq("customer_id", session.user.id)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Riwayat order gagal dimuat:", error);
+    body.innerHTML = `<div class="empty"><i class="fa-solid fa-triangle-exclamation"></i>Riwayat order belum dapat dimuat.</div>`;
+    panel.hidden = false;
+    return;
+  }
+  body.innerHTML = data.length ? data.map(row => `
+    <div class="detail-grid" style="margin:0 0 1rem;padding:1rem;border:1px solid var(--stroke);border-radius:14px">
+      <div class="detail-cell"><div class="k">Order</div><div class="v">${esc(row.id)}</div></div>
+      <div class="detail-cell"><div class="k">Layanan</div><div class="v">${esc(row.game_name)} · ${esc(row.service_name)}</div></div>
+      <div class="detail-cell"><div class="k">Status</div><div class="v"><span class="badge s${row.status}">${esc(ORDER_STATUS[row.status] || "Tidak diketahui")}</span></div></div>
+      <div class="detail-cell"><div class="k">Harga</div><div class="v">${fmtR(row.price)}</div></div>
+      <div class="detail-cell"><a class="btn btn-primary btn-sm" href="status.html?id=${encodeURIComponent(row.id)}&token=${encodeURIComponent(row.tracking_token)}">Lihat Detail</a></div>
+    </div>`).join("") : `<div class="empty"><i class="fa-solid fa-fish"></i>Belum ada order dari akun ini.</div>`;
+  panel.hidden = false;
 }
 /* =================================================================
    ADMIN — Login
@@ -958,8 +1004,48 @@ function initAdminLogin() {
   });
 }
 function getLoginDestination() {
-  const next = new URLSearchParams(location.search).get("next") || "order.html";
-  return /^[a-z0-9_-]+\.html(?:#[a-z0-9_-]+)?$/i.test(next) && !next.startsWith("admin/") ? next : "order.html";
+  const next = new URLSearchParams(location.search).get("next") || "index.html";
+  return /^[a-z0-9_-]+\.html(?:#[a-z0-9_-]+)?$/i.test(next) && !next.startsWith("admin/") ? next : "index.html";
+}
+function customerAvatarURL(user) {
+  const meta = user?.user_metadata || {};
+  return meta.avatar_url || meta.picture || "";
+}
+function customerDisplayName(user) {
+  const meta = user?.user_metadata || {};
+  return meta.full_name || meta.name || user?.email?.split("@")[0] || "Customer";
+}
+function renderCustomerAuth(user) {
+  const slot = $("#customerAuth");
+  if (!slot) return;
+  if (!user) {
+    slot.innerHTML = `<a href="login.html" class="nav-login" aria-label="Masuk"><i class="fa-solid fa-right-to-bracket"></i><span> Masuk</span></a>`;
+    return;
+  }
+  const avatar = customerAvatarURL(user);
+  const name = esc(customerDisplayName(user));
+  slot.innerHTML = `
+    <div class="customer-chip" title="${name}">
+      ${avatar ? `<img src="${esc(avatar)}" alt="${name}">` : `<span class="customer-chip-initial">${esc(name.slice(0, 1).toUpperCase())}</span>`}
+      <span class="customer-chip-name">${name}</span>
+      <button type="button" id="customerLogoutBtn" class="customer-logout" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>`;
+  $("#customerLogoutBtn", slot)?.addEventListener("click", async () => {
+    try { await supabaseClient?.auth.signOut(); } catch (err) { console.error(err); }
+    renderCustomerAuth(null);
+    if (PAGE === "order") redirectToCustomerLogin();
+    else toast("Kamu sudah keluar.", "ok");
+  });
+}
+async function updateCustomerNavbar() {
+  if (!supabaseClient || PAGE.startsWith("admin") || PAGE === "login") return;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    renderCustomerAuth(session?.user || null);
+    supabaseClient.auth.onAuthStateChange((_event, newSession) => renderCustomerAuth(newSession?.user || null));
+  } catch (err) {
+    console.error(err);
+  }
 }
 async function initCustomerLogin() {
   const button = $("#googleLoginBtn");
@@ -980,7 +1066,7 @@ async function initCustomerLogin() {
     if (error) {
       button.disabled = false;
       button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v4.1h5.7c-.25 1.32-1.76 3.88-5.7 3.88A6.19 6.19 0 1 1 12 5.81c2.24 0 3.75.96 4.61 1.79l3.14-3.05C17.74 2.67 15.13 1.5 12 1.5A10.5 10.5 0 1 0 22.5 12c0-.7-.08-1.22-.17-1.8H12Z"/></svg> Lanjutkan dengan Google';
-      toast("Login Google gagal: " + esc(error.message), "err", 9000);
+      toast("Login Google gagal: " + (error.message || error), "err", 9000);
     }
   });
 }
@@ -1350,6 +1436,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initTheme();
   observeReveals();
+  updateCustomerNavbar();
   if ((PAGE === "index" || PAGE === "layanan") && !PAGE.startsWith("wa-")) {
     bindServiceTabs();
     activateGame("fisch");
@@ -1359,7 +1446,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (PAGE === "index" && !PAGE.startsWith("wa-")) { renderStats(); initLiveStats(); renderProjects(); renderSteps(); renderTestis(); renderFaqs($("#faqList")); }
   if (PAGE === "layanan" && !PAGE.startsWith("wa-")) { renderPriceTable("fisch"); }
   if (PAGE === "order") {
-    requireCustomerLogin().then(isLoggedIn => { if (isLoggedIn) bindOrderForm(""); });
+    guardOrderPage();
   }
   if (PAGE === "status") initStatusPage();
   if (PAGE === "faq") { renderFaqs($("#faqList")); }

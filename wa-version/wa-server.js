@@ -9,6 +9,11 @@ const path = require("path");
 const url = require("url");
 
 const PORT = 8743;
+const ADMIN_TOKEN = process.env.WA_ADMIN_TOKEN || "";
+const MAX_BODY_BYTES = 64 * 1024;
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_MAX_REQUESTS = 120;
+const rateBuckets = new Map();
 const DATA_DIR = path.join(__dirname, "data");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
 const MIME = {
@@ -24,6 +29,41 @@ const MIME = {
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, "[]", "utf-8");
 
+function isAdminRequest(req) {
+  if (!ADMIN_TOKEN) return false;
+  const header = req.headers["x-admin-token"];
+  return typeof header === "string" && header.length > 0 && header === ADMIN_TOKEN;
+}
+
+function clientIp(req) {
+  return req.socket?.remoteAddress || "unknown";
+}
+
+function isRateLimited(req) {
+  const key = clientIp(req);
+  const now = Date.now();
+  const bucket = rateBuckets.get(key) || [];
+  const fresh = bucket.filter((t) => now - t < RATE_WINDOW_MS).slice(-RATE_MAX_REQUESTS);
+  fresh.push(now);
+  rateBuckets.set(key, fresh);
+  return fresh.length > RATE_MAX_REQUESTS;
+}
+
+function sanitizeText(value, maxLength) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  return text.slice(0, maxLength);
+}
+
+function isValidStatus(value) {
+  return Number.isInteger(value) && value >= 0 && value <= 5;
+}
+
+function sendJson(res, statusCode, payload) {
+  res.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
+  return res.end(JSON.stringify(payload));
+}
+
 function readOrders() {
   try { return JSON.parse(fs.readFileSync(ORDERS_FILE, "utf-8")); }
   catch (e) { return []; }
@@ -33,7 +73,23 @@ function writeOrders(orders) {
   fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
 }
 
+function safeStaticPath(pathname) {
+  let requested = pathname === "/" ? "wa-index.html" : pathname.slice(1);
+  requested = requested.split("?")[0];
+  if (!requested || requested.endsWith("/")) requested += "wa-index.html";
+  if (!path.extname(requested)) requested += ".html";
+  const normalized = path.normalize(requested).replace(/^\.\.(\\|\/)/, "");
+  const filePath = path.join(__dirname, normalized);
+  if (filePath !== __dirname && !filePath.startsWith(__dirname + path.sep)) return null;
+  if (path.basename(filePath) === "wa-server.js") return null;
+  return filePath;
+}
+
 function serveFile(res, filePath) {
+  if (!filePath) {
+    res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
+    return res.end("Akses ditolak");
+  }
   const ext = path.extname(filePath).toLowerCase();
   const ct = MIME[ext] || "application/octet-stream";
   fs.readFile(filePath, (err, data) => {
@@ -48,10 +104,20 @@ function serveFile(res, filePath) {
 
 function getBody(req) {
   return new Promise((resolve) => {
+    let received = 0;
     let body = "";
-    req.on("data", (chunk) => body += chunk);
+    let tooLarge = false;
+    req.on("data", (chunk) => {
+      received += chunk.length;
+      if (received > MAX_BODY_BYTES) {
+        tooLarge = true;
+        return;
+      }
+      body += chunk;
+    });
     req.on("end", () => {
-      try { resolve(JSON.parse(body)); }
+      if (tooLarge) return resolve(null);
+      try { resolve(JSON.parse(body || "{}")); }
       catch (e) { resolve({}); }
     });
   });
@@ -60,8 +126,17 @@ function getBody(req) {
 function generateId() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let id = "FJ-";
-  for (let i = 0; i < 6; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < 8; i++) id += chars.charAt(cryptoRandomIndex(chars.length));
   return id;
+}
+
+function cryptoRandomIndex(max) {
+  try {
+    const crypto = require("crypto");
+    return crypto.randomInt(max);
+  } catch (e) {
+    return Math.floor(Math.random() * max);
+  }
 }
 
 // Kalkulasi harga
@@ -85,10 +160,16 @@ const server = http.createServer(async (req, res) => {
   const pathname = parsed.pathname;
   const method = req.method;
 
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // CORS + security headers
+  res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:8743");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Admin-Token");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; script-src 'self' https://cdnjs.cloudflare.com");
+
+  if (isRateLimited(req)) return sendJson(res, 429, { success: false, error: "Terlalu banyak permintaan. Coba lagi sebentar." });
 
   if (method === "OPTIONS") {
     res.writeHead(204);
@@ -97,10 +178,7 @@ const server = http.createServer(async (req, res) => {
 
   // --- Static files ---
   if (method === "GET" && !pathname.startsWith("/api/")) {
-    let filePath = path.join(__dirname, pathname === "/" ? "wa-index.html" : pathname);
-    // Fallback to .html if no extension
-    if (!path.extname(filePath)) filePath += ".html";
-    return serveFile(res, filePath);
+    return serveFile(res, safeStaticPath(pathname));
   }
 
   // --- API Routes ---
@@ -108,51 +186,61 @@ const server = http.createServer(async (req, res) => {
 
   // GET /api/services?game=fisch
   if (pathname === "/api/services" && method === "GET") {
-    const game = parsed.query.game || "fisch";
+    const game = parsed.query.game === "fishit" ? "fishit" : "fisch";
     const config = require("./wa-config.js");
     const services = config.WACONFIG.services[game] || [];
-    return res.end(JSON.stringify({ success: true, data: services }));
+    return sendJson(res, 200, { success: true, data: services });
   }
 
   // POST /api/order — Create order from WhatsApp chat
   if (pathname === "/api/order" && method === "POST") {
     const body = await getBody(req);
+    if (!body) return sendJson(res, 413, { success: false, error: "Data terlalu besar." });
     const config = require("./wa-config.js").WACONFIG;
 
     // Validate required fields
-    if (!body.game || !body.service || !body.target || !body.username) {
-      return res.end(JSON.stringify({ success: false, error: "Lengkapi semua data: game, service, target, username" }));
+    const game = sanitizeText(body.game, 10);
+    const service = sanitizeText(body.service, 30);
+    const target = sanitizeText(body.target, 200);
+    const username = sanitizeText(body.username, 30);
+    const detail = sanitizeText(body.detail, 500);
+    const contact = sanitizeText(body.contact, 30).replace(/[^0-9+]/g, "");
+    if (!game || !service || !target || !username) {
+      return sendJson(res, 400, { success: false, error: "Lengkapi semua data: game, service, target, username" });
+    }
+    if (!/^[A-Za-z0-9_.]{3,30}$/.test(username)) {
+      return sendJson(res, 400, { success: false, error: "Username Roblox tidak valid." });
     }
 
-    const gameServices = config.services[body.game];
+    const gameServices = config.services[game];
     if (!gameServices) {
-      return res.end(JSON.stringify({ success: false, error: "Game tidak valid. Pilih: fisch atau fishit" }));
+      return sendJson(res, 400, { success: false, error: "Game tidak valid. Pilih: fisch atau fishit" });
     }
-    const svc = gameServices.find(s => s.id === body.service);
+    const svc = gameServices.find(s => s.id === service);
     if (!svc) {
-      return res.end(JSON.stringify({ success: false, error: "Layanan tidak valid untuk game ini" }));
+      return sendJson(res, 400, { success: false, error: "Layanan tidak valid untuk game ini" });
     }
 
-    const priorityKey = body.priority || "normal";
-    const price = calcPrice(svc.price, body.target, priorityKey, config);
+    const priorityKey = body.priority === "express" ? "express" : "normal";
+    const price = calcPrice(svc.price, target, priorityKey, config);
     const now = new Date().toISOString();
     const order = {
       id: generateId(),
-      game: body.game,
-      gameName: config.games[body.game].name,
-      service: body.service,
+      game,
+      gameName: config.games[game].name,
+      service,
       serviceName: svc.name,
-      target: body.target,
-      username: body.username,
-      detail: body.detail || "",
+      target,
+      username,
+      detail,
       priority: priorityKey === "express" ? "Express" : "Normal",
-      priorityKey: priorityKey,
-      price: price,
+      priorityKey,
+      price,
       est: svc.est + (priorityKey === "express" ? " (Express)" : " (Normal)"),
       status: 0, // Menunggu Pembayaran
       createdAt: now,
       updatedAt: now,
-      customerContact: body.contact || "",
+      customerContact: contact,
       notes: "",
     };
 
@@ -160,57 +248,74 @@ const server = http.createServer(async (req, res) => {
     orders.unshift(order);
     writeOrders(orders);
 
-    return res.end(JSON.stringify({
+    return sendJson(res, 200, {
       success: true,
       data: order,
       message: `Order berhasil dibuat! ID: ${order.id}. Total: Rp ${price.toLocaleString("id-ID")}. Kami akan hubungi kamu via WhatsApp.`
-    }));
+    });
   }
 
-  // GET /api/orders — List orders
+  // GET /api/orders — hanya admin, daftar ringkas tanpa kontak penuh
   if (pathname === "/api/orders" && method === "GET") {
-    const orders = readOrders();
-    return res.end(JSON.stringify({ success: true, data: orders }));
+    if (!isAdminRequest(req)) return sendJson(res, 403, { success: false, error: "Butuh token admin." });
+    const orders = readOrders().map((o) => ({
+      id: o.id, game: o.game, gameName: o.gameName, service: o.service, serviceName: o.serviceName,
+      target: o.target, username: o.username, priority: o.priority, price: o.price,
+      est: o.est, status: o.status, createdAt: o.createdAt, updatedAt: o.updatedAt,
+      notes: o.notes || "",
+    }));
+    return sendJson(res, 200, { success: true, data: orders });
   }
 
   // GET /api/order/:id — Get single order
   if (pathname.startsWith("/api/order/") && method === "GET") {
-    const id = pathname.replace("/api/order/", "");
+    if (!isAdminRequest(req)) return sendJson(res, 403, { success: false, error: "Butuh token admin." });
+    const id = sanitizeText(pathname.replace("/api/order/", ""), 20).toUpperCase();
+    if (!/^FJ-[A-Z0-9]{6,10}$/.test(id)) return sendJson(res, 400, { success: false, error: "Order ID tidak valid." });
     const orders = readOrders();
-    const order = orders.find(o => o.id.toLowerCase() === id.toLowerCase());
+    const order = orders.find(o => String(o.id).toUpperCase() === id);
     if (!order) {
-      return res.end(JSON.stringify({ success: false, error: "Order tidak ditemukan" }));
+      return sendJson(res, 404, { success: false, error: "Order tidak ditemukan" });
     }
-    return res.end(JSON.stringify({ success: true, data: order }));
+    return sendJson(res, 200, { success: true, data: order });
   }
 
   // PUT /api/order/:id — Update order status
   if (pathname.startsWith("/api/order/") && method === "PUT") {
-    const id = pathname.replace("/api/order/", "");
+    if (!isAdminRequest(req)) return sendJson(res, 403, { success: false, error: "Butuh token admin." });
+    const id = sanitizeText(pathname.replace("/api/order/", ""), 20).toUpperCase();
+    if (!/^FJ-[A-Z0-9]{6,10}$/.test(id)) return sendJson(res, 400, { success: false, error: "Order ID tidak valid." });
     const body = await getBody(req);
+    if (!body) return sendJson(res, 413, { success: false, error: "Data terlalu besar." });
     const orders = readOrders();
-    const idx = orders.findIndex(o => o.id.toLowerCase() === id.toLowerCase());
+    const idx = orders.findIndex(o => String(o.id).toUpperCase() === id);
     if (idx === -1) {
-      return res.end(JSON.stringify({ success: false, error: "Order tidak ditemukan" }));
+      return sendJson(res, 404, { success: false, error: "Order tidak ditemukan" });
     }
-    if (body.status !== undefined) orders[idx].status = body.status;
-    if (body.notes !== undefined) orders[idx].notes = body.notes;
+    if (body.status !== undefined) {
+      const status = Number(body.status);
+      if (!isValidStatus(status)) return sendJson(res, 400, { success: false, error: "Status tidak valid." });
+      orders[idx].status = status;
+    }
+    if (body.notes !== undefined) orders[idx].notes = sanitizeText(body.notes, 500);
     orders[idx].updatedAt = new Date().toISOString();
     writeOrders(orders);
-    return res.end(JSON.stringify({ success: true, data: orders[idx] }));
+    return sendJson(res, 200, { success: true, data: orders[idx] });
   }
 
   // DELETE /api/order/:id
   if (pathname.startsWith("/api/order/") && method === "DELETE") {
-    const id = pathname.replace("/api/order/", "");
+    if (!isAdminRequest(req)) return sendJson(res, 403, { success: false, error: "Butuh token admin." });
+    const id = sanitizeText(pathname.replace("/api/order/", ""), 20).toUpperCase();
+    if (!/^FJ-[A-Z0-9]{6,10}$/.test(id)) return sendJson(res, 400, { success: false, error: "Order ID tidak valid." });
     let orders = readOrders();
-    const idx = orders.findIndex(o => o.id.toLowerCase() === id.toLowerCase());
+    const idx = orders.findIndex(o => String(o.id).toUpperCase() === id);
     if (idx === -1) {
-      return res.end(JSON.stringify({ success: false, error: "Order tidak ditemukan" }));
+      return sendJson(res, 404, { success: false, error: "Order tidak ditemukan" });
     }
     orders.splice(idx, 1);
     writeOrders(orders);
-    return res.end(JSON.stringify({ success: true, message: "Order dihapus" }));
+    return sendJson(res, 200, { success: true, message: "Order dihapus" });
   }
 
   // 404
