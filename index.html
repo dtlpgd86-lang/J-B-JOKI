@@ -17,6 +17,9 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Tailwind CSS (Play CDN) — hybrid utility class, preflight dimatikan agar desain custom style.css tetap aman -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { corePlugins: { preflight: false } };</script>
   <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("fj_theme") === "light" ? "light" : "dark") } catch (e) { document.documentElement.setAttribute("data-theme", "dark") }</script>
 </head>
 
@@ -39,11 +42,6 @@
         <div class="hero-grid">
           <div>
             <span class="hero-badge reveal"><span class="dot"></span> Premium Gaming Service • Trusted</span>
-            <div class="reveal" style="margin-top:1rem">
-              <a href="wa-version/wa-index.html" class="btn btn-success" style="font-size:.92rem;padding:.5rem 1.2rem;border-radius:50px;display:inline-flex;align-items:center;gap:.5rem">
-                <i class="fa-brands fa-whatsapp"></i> Alternatif Order via WhatsApp
-              </a>
-            </div>
             <h1 class="reveal d1">Jasa Joki <span class="gtext">Fisch</span> &amp; <span class="gtext">Fish It!</span>
             </h1>
             <p class="lead reveal d2">Mau ikan langka, uang banyak, atau target tertentu? Pilih layanan dan buat order
@@ -207,6 +205,7 @@
       if (dc) dc.href = APPCONFIG.discord;
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="js/data.js"></script>
   <script src="js/script.js"></script>
   <a href="#konfigurasi" id="waBanner" class="wa-banner" aria-label="Chat WhatsApp">

@@ -205,7 +205,7 @@ function injectNav() {
       </ul>
       <div class="nav-right">
         <button class="theme-toggle" aria-label="Ganti tema gelap/terang"><i class="fa-solid fa-moon"></i></button>
-        <div id="customerAuth"><a href="login.html" class="nav-login" aria-label="Masuk"><i class="fa-solid fa-right-to-bracket"></i><span> Masuk</span></a></div>
+        <div id="customerAuth" style="visibility:hidden"><a href="login.html" class="nav-login" aria-label="Masuk"><i class="fa-solid fa-right-to-bracket"></i><span> Masuk</span></a></div>
         <a href="login.html?next=order.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-anchor"></i> Order Sekarang</a>
         <button class="ham" id="hamBtn" aria-label="Menu"><span></span><span></span><span></span></button>
       </div>
@@ -476,7 +476,8 @@ function recalcEstimate(prefix) {
     <li><span>Game</span><b>${esc(gameName)}</b></li>
     <li><span>Layanan</span><b>${esc(svcName)}</b></li>
     <li><span>Target</span><b>${esc(target || "—")}</b></li>
-    <li><span>Prioritas</span><b>${priority === "express" ? "Express ⚡ (x" + APPCONFIG.expressMultiplier + ")" : "Normal"}</b></li>`;
+    <li><span>Prioritas</span><b>${priority === "express" ? "Express ⚡ (x" + APPCONFIG.expressMultiplier + ")" : "Normal"}</b></li>
+    <li><span>Password Dummy</span><b>${esc((id => (document.getElementById(id) ? document.getElementById(id).value.trim() : ""))(prefix + "detail")) || "—"}</b></li>`;
 }
 function bindOrderForm(prefix) {
   const form = $("#" + prefix + "orderForm"); if (!form) return;
@@ -486,6 +487,8 @@ function bindOrderForm(prefix) {
   gameSel.addEventListener("change", () => fillServiceOptions(prefix, gameSel.value, ""));
   svcSel.addEventListener("change", () => recalcEstimate(prefix));
   $("#" + prefix + "target").addEventListener("input", () => recalcEstimate(prefix));
+  const pwInput = $("#" + prefix + "detail");
+  if (pwInput) pwInput.addEventListener("input", () => recalcEstimate(prefix));
   $$(`input[name="${prefix}prio"]`).forEach(r => {
     r.addEventListener("change", () => {
       $$(`input[name="${prefix}prio"]`).forEach(x => x.closest(".prio-card").classList.toggle("on", x.checked));
@@ -542,6 +545,9 @@ function validateForm(prefix) {
   check("game", ""); check("service", "");
   check("target", "Target wajib diisi.");
   check("user", "Username Roblox wajib diisi.", (v) => /^[A-Za-z0-9_.]{3,20}$/.test(v));
+  // Password dummy wajib diisi
+  const pwOk = check("detail", "Password dummy wajib diisi.");
+  if (!pwOk) toast("Isi password DUMMY di kolom no. 5 (jangan password asli!). Ganti kembali ke password asli setelah orderan selesai.", "err", 7000);
   if ($("#" + prefix + "user").closest(".field").classList.contains("bad"))
     toast("Username Roblox harus 3–20 karakter (huruf, angka, _ atau .).", "err");
   if (!$(`input[name="${prefix}prio"]:checked`)) { ok = false; }
@@ -561,6 +567,10 @@ function showSuccess(order) {
           <p style="color:var(--muted)">Simpan Order ID berikut untuk mengecek status:</p>
           <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:900;letter-spacing:2px;background:linear-gradient(120deg,#00d4ff,#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent;margin:.8rem 0" id="succId"></div>
           <p style="color:var(--muted);font-size:.93rem">Instruksi pembayaran akan dikirim ke Customer Service.<br>Pembayaran: <b style="color:var(--gold)">${esc(APPCONFIG.acceptedPayments)}</b></p>
+          <figure style="margin:1.2rem 0 0;background:#fff;border-radius:12px;padding:.8rem;display:inline-block">
+            <img src="assets/images/qris.jpg" alt="QRIS JUAN&BIM STORE — QR Code Standar Pembayaran Nasional" style="width:100%;max-width:250px;display:block;border-radius:8px" loading="lazy">
+            <figcaption style="font-family:var(--font-head);font-size:.66rem;letter-spacing:2px;text-transform:uppercase;color:#0f172a;margin-top:.5rem">Scan QRIS — Satu QRIS Untuk Semua</figcaption>
+          </figure>
           <div class="prio-grid" style="margin-top:1.2rem">
             <a href="status.html?id=${order.id}&token=${order.trackingToken}" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Cek Status</a>
             <a href="#" class="btn btn-ghost" data-close="successModal">Tutup</a>
@@ -614,8 +624,9 @@ const MODAL_TMPL = `
             <span class="err">Username Roblox 3–20 karakter (huruf, angka, _ atau .)</span>
           </div>
           <div class="field full">
-            <label>Detail Tambahan</label>
-            <textarea class="area" id="m-detail" placeholder="Catatan tambahan, misal: warna rod, preferensi area, dll (opsional)"></textarea>
+            <label>Password Dummy Akun<b>*</b></label>
+            <input class="inp" id="m-detail" type="text" placeholder="Password dummy — contoh: 12345678 (bukan password asli!)" required autocomplete="off">
+            <span class="err">Isi password DUMMY — jangan password asli. Ganti kembali ke password asli setelah order selesai.</span>
           </div>
           <div class="field full">
             <label>Prioritas<b>*</b></label>
@@ -710,9 +721,13 @@ async function openOrderModal(game, svcId) {
 function bindOrderButtons() {
   $$(".order-btn").forEach(b => b.addEventListener("click", (e) => {
     e.preventDefault(); e.stopPropagation();
-    openOrderModal(b.dataset.game, b.dataset.svc);
-  }));
-}
+    // Semua orderan customer diarahkan ke halaman order.html
+    const url = new URL("order.html", location.href);
+    if (b.dataset.game) url.searchParams.set("game", b.dataset.game);
+    if (b.dataset.svc) url.searchParams.set("service", b.dataset.svc);
+    window.location.href = url.href;
+  }))
+;}
 
 /* =================================================================
    FAQ + TESTIMONI
@@ -929,16 +944,17 @@ async function renderStatus(id, token, { watch = false } = {}) {
       <div class="detail-cell"><div class="k">Game</div><div class="v"><span class="game-chip ${meta.chip}"><i class="fa-solid ${meta.icon}"></i>${meta.name}</span></div></div>
       <div class="detail-cell"><div class="k">Layanan</div><div class="v">${esc(order.serviceName)}</div></div>
       <div class="detail-cell"><div class="k">Target</div><div class="v">${esc(order.target)}</div></div>
+      <div class="detail-cell"><div class="k">Password Dummy</div><div class="v">${esc(order.detail || "—")}</div></div>
       <div class="detail-cell"><div class="k">Prioritas</div><div class="v">${esc(order.priority)}</div></div>
       <div class="detail-cell"><div class="k">Estimasi Harga</div><div class="v" style="color:var(--cyan)">${fmtR(order.price)}</div></div>
     </div>
-    ${order.detail ? `<div style="margin-top:1rem;color:var(--muted);font-size:.95rem;background:var(--soft-bg);border:1px solid var(--stroke);border-radius:14px;padding:.9rem 1rem"><b>Detail tambahan:</b> ${esc(order.detail)}</div>` : ""}
+    ${order.detail ? `<div style="margin-top:1rem;color:var(--muted);font-size:.95rem;background:var(--soft-bg);border:1px solid var(--stroke);border-radius:14px;padding:.9rem 1rem"><b>Password dummy akun:</b> ${esc(order.detail)}<br><small style="color:var(--gold)"><i class="fa-solid fa-shield-halved"></i> Setelah order selesai, ingatkan customer untuk ganti kembali ke password asli.</small></div>` : ""}
     <div style="margin-top:1.4rem;font-family:var(--font-head);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted-2)">Progres Order</div>
     ${statusTimelineHTML(s)}
     ${s === 5 ? `<div class="cancel-banner"><i class="fa-solid fa-circle-xmark"></i><span>Order ini <b>dibatalkan</b>. Hubungi customer service bila ada kendala pembayaran.</span></div>` : ""}
-    ${s === 0 ? `<div class="pay-note"><i class="fa-solid fa-hand-holding-dollar" style="margin-right:.5rem"></i>Order menunggu pembayaran. Bayar melalui <b>${esc(APPCONFIG.acceptedPayments)}</b> lalu kirim bukti ke customer service untuk konfirmasi.</div>` : ""}
+    ${s === 0 ? `<div class="pay-note"><i class="fa-solid fa-hand-holding-dollar" style="margin-right:.5rem"></i>Order menunggu pembayaran. Bayar melalui <b>${esc(APPCONFIG.acceptedPayments)}</b> lalu kirim bukti ke customer service untuk konfirmasi.<figure style="margin:1rem auto 0;background:#fff;border-radius:12px;padding:.7rem;display:inline-block;text-align:center"><img src="assets/images/qris.jpg" alt="QRIS JUAN&BIM STORE" style="width:100%;max-width:220px;display:block;border-radius:8px" loading="lazy"><figcaption style="font-family:var(--font-head);font-size:.64rem;letter-spacing:2px;text-transform:uppercase;color:#0f172a;margin-top:.5rem">Scan QRIS untuk bayar</figcaption></figure></div>` : ""}
     ${s >= 0 && s <= 3 ? chatPanelHTML(order.id, "customer") : ""}
-    ${s === 4 ? `<div class="pay-note" style="border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08);color:var(--green)"><i class="fa-solid fa-circle-check" style="margin-right:.5rem"></i>Order <b>selesai</b>! Terima kasih telah menggunakan J&B JOKI.</div>${ratingPanelHTML(order)}` : ""}`;
+    ${s === 4 ? `<div class="pay-note" style="border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.08);color:var(--green)"><i class="fa-solid fa-circle-check" style="margin-right:.5rem"></i>Order <b>selesai</b>! Terima kasih telah menggunakan J&B JOKI.${order.detail ? `<br><small style="color:var(--gold)"><i class="fa-solid fa-key"></i> Jangan lupa: sekarang ganti kembali password Roblox kamu dari password dummy ke password asli.</small>` : ""}</div>${ratingPanelHTML(order)}` : ""}`;
   card.classList.add("show");
   bindRatingForm(order, token);
   if (s >= 0 && s <= 3) initOrderChat(order, token, "customer");
@@ -1020,6 +1036,7 @@ function renderCustomerAuth(user) {
   if (!slot) return;
   if (!user) {
     slot.innerHTML = `<a href="login.html" class="nav-login" aria-label="Masuk"><i class="fa-solid fa-right-to-bracket"></i><span> Masuk</span></a>`;
+    slot.style.visibility = "";
     return;
   }
   const avatar = customerAvatarURL(user);
@@ -1028,8 +1045,9 @@ function renderCustomerAuth(user) {
     <div class="customer-chip" title="${name}">
       ${avatar ? `<img src="${esc(avatar)}" alt="${name}">` : `<span class="customer-chip-initial">${esc(name.slice(0, 1).toUpperCase())}</span>`}
       <span class="customer-chip-name">${name}</span>
-      <button type="button" id="customerLogoutBtn" class="customer-logout" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
+      <button type="button" id="customerLogoutBtn" class="customer-logout" title="Keluar"><i class="fa-solid fa-right-from-bracket"></i><span>Keluar</span></button>
     </div>`;
+  slot.style.visibility = "";
   $("#customerLogoutBtn", slot)?.addEventListener("click", async () => {
     try { await supabaseClient?.auth.signOut(); } catch (err) { console.error(err); }
     renderCustomerAuth(null);
@@ -1129,7 +1147,7 @@ function orderRow(o, recent) {
     <tr data-id="${o.id}">
       <td><span class="td-id">${esc(o.id)}</span><br><small style="color:var(--muted-2)">${new Date(o.createdAt).toLocaleString("id-ID")}</small></td>
       <td><span class="game-chip ${meta.chip}"><i class="fa-solid ${meta.icon}"></i>${meta.name}</span><br><small style="color:var(--muted)">${esc(o.serviceName)}</small></td>
-      <td>${esc(o.target)}</td>
+      <td>${esc(o.target)}<br><small style="color:var(--muted-2)"><i class="fa-solid fa-key" title="Password dummy"></i> ${esc(o.detail || "—")}</small></td>
       <td>${esc(o.username)}</td>
       <td>${esc(o.priority)}<br><small style="color:var(--muted-2)">${fmtR(o.price)}</small></td>
       <td><select class="sel st-sel" data-id="${o.id}">${opts}</select></td>
@@ -1459,8 +1477,11 @@ document.addEventListener("DOMContentLoaded", () => {
 function initOrderButtonsFallback() {
   $$("[data-order]").forEach(b => b.addEventListener("click", (e) => {
     e.preventDefault();
+    // Semua orderan customer diarahkan ke halaman order.html
     const g = b.dataset.order === "fishit" ? "fishit" : "fisch";
-    openOrderModal(g, "");
+    const url = new URL("order.html", location.href);
+    url.searchParams.set("game", g);
+    window.location.href = url.href;
   }));
 }
 /* Animasi hero: bikin gelembung scene saat halaman tampil */

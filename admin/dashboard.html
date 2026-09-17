@@ -16,6 +16,9 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="../css/style.css">
+  <!-- Tailwind CSS (Play CDN) — hybrid utility class, preflight dimatikan agar desain custom style.css tetap aman -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { corePlugins: { preflight: false } };</script>
  <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("fj_theme")==="light"?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}</script>
 </head>
 
@@ -73,7 +76,7 @@
                 <tr>
                   <th>Order</th>
                   <th>Game / Layanan</th>
-                  <th>Target</th>
+                  <th>Target / Pass Dummy</th>
                   <th>User</th>
                   <th>Harga</th>
                   <th>Status</th>
@@ -99,7 +102,7 @@
                 <tr>
                   <th>Order</th>
                   <th>Game / Layanan</th>
-                  <th>Target</th>
+                  <th>Target / Pass Dummy</th>
                   <th>User</th>
                   <th>Harga</th>
                   <th>Status</th>

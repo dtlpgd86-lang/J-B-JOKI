@@ -13,7 +13,7 @@ const APPCONFIG = {
   whatsapp: "6281229422012",                                   // nomor WhatsApp (format internasional tanpa +)
   whatsappMsg: "Halo J&B JOKI! Saya mau tanya tentang jasa joki Fisch & Fish It! 🎣",
   discord: "https://discord.gg/fishjoki",                      // link server Discord
-  discordUsers: ["crazy0895_26480", "firul0312_36078"],       // akun Discord customer service
+  discordUsers: ["crazy0895_26480", "akbar056490"],       // akun Discord customer service
   /* ====== ATURAN HARGA ====== */
   expressMultiplier: 1.5,                                      // harga Express = normal x 1.5
   minPrice: 10000,                                             // harga minimum order
@@ -79,7 +79,7 @@ const PRIORITIES = {
 const FAQS = [
   { q: "Berapa lama proses pengerjaan?", a: "Tergantung layanan dan target. Umumnya 1–7 hari kerja. Prioritas Express bisa lebih cepat (sekitar setengah dari estimasi normal). Estimasi pasti ditampilkan saat kamu membuat order." },
   { q: "Apakah akun saya aman?", a: "100% aman. Kami hanya login untuk mengerjakan target yang kamu setujui, tidak mengubah apa pun di luar pesanan. Kami tidak menyimpan data akun setelah order selesai." },
-  { q: "Apakah harus memberikan password?", a: "TIDAK. Kami tidak pernah meminta password akun Roblox kamu. Cukup berikan username dan ikuti instruksi yang kami berikan (umnya cukup login di perangkat yang aman / metode tanpa kata sandi)." },
+  { q: "Apakah harus memberikan password?", a: "Ya, tapi HANYA password DUMMY. Sebelum order, ganti dulu password Roblox kamu ke password dummy (contoh: 12345678), lalu isi password dummy itu di form order. Setelah orderan selesai, segera ganti kembali ke password asli kamu." },
   { q: "Bagaimana cara mengetahui status order?", a: "Setiap order mendapat Order ID unik (contoh: FJ-8XK2PA). Klik menu Status Order, masukkan Order ID kamu, dan lihat progresnya secara real-time." },
   { q: "Apakah bisa request target tertentu?", a: "Bisa! Pilih layanan Custom Request atau Farming Target Tertentu, lalu tulis target kamu di form order — misal ikan tertentu, jumlah coins, atau level tertentu." },
   { q: "Bagaimana jika target tidak tercapai?", a: "Jika target tidak tercapai dalam estimasi waktu, kamu berhak mendapatkan penggantian pengerjaan lanjutan tanpa biaya tambahan, atau refund sesuai kebijakan. Hubungi customer service untuk mediasi." },
@@ -115,7 +115,7 @@ const PROJECTS = [
 const ORDER_STEPS = [
   { n: "01", t: "Pilih Game",         d: "Pilih Fisch atau Fish It! sesuai kebutuhan." },
   { n: "02", t: "Pilih Layanan",      d: "Tentukan target yang ingin dicapai." },
-  { n: "03", t: "Buat Order",         d: "Masukkan detail pesanan kamu." },
+  { n: "03", t: "Buat Order",         d: "Ganti password kamu ke password dummy, lalu masukkan username & password dummy." },
   { n: "04", t: "Pembayaran",         d: "Ikuti instruksi pembayaran yang tersedia." },
   { n: "05", t: "Proses",             d: "Order dikerjakan sesuai detail pesanan." },
   { n: "06", t: "Selesai",            d: "Hasil diterima & order ditandai selesai." },

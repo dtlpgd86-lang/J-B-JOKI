@@ -17,6 +17,9 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Tailwind CSS (Play CDN) — hybrid utility class, preflight dimatikan agar desain custom style.css tetap aman -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { corePlugins: { preflight: false } };</script>
  <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("fj_theme")==="light"?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}</script>
 </head>
 
@@ -62,6 +65,7 @@
       </div>
     </section>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="js/data.js"></script>
   <script src="js/script.js"></script>
 <a href="#konfigurasi" id="waBanner" class="wa-banner" aria-label="Chat WhatsApp">

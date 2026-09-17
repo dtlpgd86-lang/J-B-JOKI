@@ -17,7 +17,10 @@
     rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
- <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("fj_theme")==="light"?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}</script>
+  <!-- Tailwind CSS (Play CDN) — hybrid utility class, preflight dimatikan agar desain custom style.css tetap aman -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { corePlugins: { preflight: false } };</script>
+  <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("fj_theme") === "light" ? "light" : "dark") } catch (e) { document.documentElement.setAttribute("data-theme", "dark") }</script>
 </head>
 
 <body data-page="order">
@@ -35,10 +38,10 @@
     <section class="page-hero">
       <div class="container">
         <div class="crumbs reveal"><a href="index.html">Home</a> <i class="fa-solid fa-chevron-right"></i>
-          <span>Order</span></div>
+          <span>Order</span>
+        </div>
         <h1 class="reveal d1">Buat <span class="gtext">Order</span></h1>
-        <p class="reveal d2">Isi form di bawah — estimasi harga &amp; waktu dihitung otomatis. Jangan pernah berikan
-          password akunmu! 🐟</p>
+        <p class="reveal d2">Isi form di bawah — estimasi harga &amp; waktu dihitung otomatis.🐟</p>
       </div>
     </section>
 
@@ -78,13 +81,24 @@
               <label>4. Username Roblox<b>*</b></label>
               <input class="inp" id="user" placeholder="Username Roblox kamu (bukan password)" required
                 autocomplete="off">
-              <span class="err">Username Roblox 3–20 karakter (huruf, angka, _ atau .). Bukan email/password ya!</span>
+              <span class="err">Username Roblox 3–20 karakter (huruf, angka, _ atau .)</span>
             </div>
 
             <div class="field full">
-              <label>5. Password Akun</label>
-              <textarea class="area" id="detail"
-                placeholder="Opsi — pakai password dummy misal:12345678."></textarea>
+              <label>5. Password Dummy Akun<b>*</b></label>
+              <input class="inp" id="detail" type="text" placeholder="Tempel password dummy di sini — contoh: 12345678"
+                required autocomplete="off">
+              <div class="warn-box" style="margin-top:.6rem">
+                <i class="fa-solid fa-shield-halved" style="margin-top:2px"></i>
+                <span><b>WAJIB sebelum order:</b> Ganti dulu password Roblox kamu ke <b>password dummy</b> (contoh:
+                  <code style="background:var(--soft-bg);padding:.1rem .4rem;border-radius:6px">12345678</code>), lalu
+                  tempel
+                  password dummy itu di atas. <b style="color:var(--gold)">JANGAN pernah tulis password asli
+                    kamu!</b><br>
+                  <span style="display:block;margin-top:.4rem"><i class="fa-solid fa-rotate-left"></i> <b>Setelah
+                      orderan selesai, harap ganti kembali ke password asli kamu.</b></span></span>
+              </div>
+              <span class="err">Password dummy wajib diisi — jangan isi password asli kamu!</span>
             </div>
 
             <div class="field full">
@@ -106,8 +120,8 @@
             <div class="field full">
               <div class="warn-box" style="justify-content:center;text-align:center">
                 <i class="fa-solid fa-triangle-exclamation" style="margin-top:2px"></i>
-                <span><b>Jangan pernah memberikan password akun kepada siapa pun.</b><br>Kami TIDAK akan pernah meminta
-                  password Roblox kamu.</span>
+                <span><b>Isi hanya password DUMMY di kolom no. 5 — bukan password asli kamu.</b><br>Setelah orderan
+                  selesai, segera ganti kembali ke password asli kamu.</span>
               </div>
             </div>
 
@@ -115,7 +129,7 @@
               <button type="submit" class="btn btn-primary btn-block" style="padding:1.05rem"><i
                   class="fa-solid fa-paper-plane"></i> Buat Order</button>
             </div>
-          </form>          <!-- ============ RINGKASAN ESTIMASI ============ -->
+          </form> <!-- ============ RINGKASAN ESTIMASI ============ -->
           <aside style="position:sticky;top:calc(var(--nav-h) + 20px)">
             <div class="est-panel reveal">
               <div class="est-price">
@@ -123,47 +137,53 @@
                 <span class="num" id="estPrice">—</span>
               </div>
               <div class="est-row"><span class="k">Estimasi Waktu</span><span class="v" id="estTime">—</span></div>
-              <div style="font-family:var(--font-head);font-size:.68rem;letter-spacing:2px;color:var(--muted-2);text-transform:uppercase;margin:.8rem 0 .3rem">Detail Pesanan</div>
-              <ul id="detailsList" style="list-style:none;display:flex;flex-direction:column;gap:.5rem;font-size:.94rem;color:var(--muted)">
+              <div
+                style="font-family:var(--font-head);font-size:.68rem;letter-spacing:2px;color:var(--muted-2);text-transform:uppercase;margin:.8rem 0 .3rem">
+                Detail Pesanan</div>
+              <ul id="detailsList"
+                style="list-style:none;display:flex;flex-direction:column;gap:.5rem;font-size:.94rem;color:var(--muted)">
                 <li>Lengkapi pilihan game &amp; layanan untuk melihat estimasi.</li>
               </ul>
             </div>
-            <div class="est-panel reveal d1" style="margin-top:1.2rem;border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.06)">
+            <div class="est-panel reveal d1"
+              style="margin-top:1.2rem;border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.06)">
               <div style="display:flex;gap:.8rem;align-items:flex-start;font-size:.92rem;color:var(--green)">
                 <i class="fa-solid fa-shield-halved" style="margin-top:3px;font-size:1.2rem"></i>
                 <span><b>Kenapa aman?</b><br>Kami joki via metode aman &amp; tidak menyimpan data akun.</span>
               </div>
             </div>
-            <p class="mini-note" style="margin-top:1rem">💳 Pembayaran: <b style="color:var(--gold)">QRIS, DANA, OVO, GoPay, Bank BCA/BRI</b></p>
+            <p class="mini-note" style="margin-top:1rem">💳 Pembayaran: <b style="color:var(--gold)">QRIS, DANA, OVO,
+                GoPay, Bank BCA/BRI</b></p>
           </aside>
         </div>
       </div>
     </section>
- </main>
+  </main>
 
- <script>
-   // Pre-select dari tombol "Order" di halaman lain (?game=...&service=...)
-   document.addEventListener("DOMContentLoaded", function () {
-     var q = new URLSearchParams(location.search);
-     var g = q.get("game"), s = q.get("service");
-     var gs = document.getElementById("game");
-     if (g && (g === "fisch" || g === "fishit")) {
-       gs.value = g;
-       fillServiceOptions("", g, s || "");
-       recalcEstimate("");
-     }
-   });
- </script>
- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
- <script src="js/data.js"></script>
- <script src="js/script.js"></script>
-<a href="#konfigurasi" id="waBanner" class="wa-banner" aria-label="Chat WhatsApp">
+  <script>
+    // Pre-select dari tombol "Order" di halaman lain (?game=...&service=...)
+    document.addEventListener("DOMContentLoaded", function () {
+      var q = new URLSearchParams(location.search);
+      var g = q.get("game"), s = q.get("service");
+      var gs = document.getElementById("game");
+      if (g && (g === "fisch" || g === "fishit")) {
+        gs.value = g;
+        fillServiceOptions("", g, s || "");
+        recalcEstimate("");
+      }
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/script.js"></script>
+  <a href="#konfigurasi" id="waBanner" class="wa-banner" aria-label="Chat WhatsApp">
     <div class="wa-pulse"></div>
     <div class="wa-banner-btn"><i class="fa-brands fa-whatsapp"></i></div>
     <div class="wa-banner-text">
-        <span class="wa-t">Butuh Bantuan?</span>
-        <span class="wa-s">Chat Customer Service &gt;</span>
+      <span class="wa-t">Butuh Bantuan?</span>
+      <span class="wa-s">Chat Customer Service &gt;</span>
     </div>
-</a>
+  </a>
 </body>
+
 </html>

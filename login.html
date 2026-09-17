@@ -7,19 +7,28 @@
   <meta name="description" content="Masuk ke akun J&B JOKI untuk melanjutkan order jasa joki Fisch dan Fish It!">
   <meta name="theme-color" content="#020617">
   <title>Masuk â€” J&B JOKI</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸŸ</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸŸ</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
- <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("fj_theme")==="light"?"light":"dark")}catch(e){document.documentElement.setAttribute("data-theme","dark")}</script>
+  <!-- Tailwind CSS (Play CDN) — hybrid utility class, preflight dimatikan agar desain custom style.css tetap aman -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { corePlugins: { preflight: false } };</script>
+  <script>try { document.documentElement.setAttribute("data-theme", localStorage.getItem("fj_theme") === "light" ? "light" : "dark") } catch (e) { document.documentElement.setAttribute("data-theme", "dark") }</script>
 </head>
 
 <body data-page="login" class="login-body">
- <button class="theme-toggle fixed" id="themeToggle" aria-label="Ganti tema gelap/terang"><i class="fa-solid fa-moon"></i></button>
- <div class="bg-fx"></div>
-  <noscript><div class="noscript">Aktifkan JavaScript untuk masuk ke J&B JOKI.</div></noscript>
+  <button class="theme-toggle fixed" id="themeToggle" aria-label="Ganti tema gelap/terang"><i
+      class="fa-solid fa-moon"></i></button>
+  <div class="bg-fx"></div>
+  <noscript>
+    <div class="noscript">Aktifkan JavaScript untuk masuk ke J&B JOKI.</div>
+  </noscript>
 
   <main class="customer-login-wrap">
     <section class="customer-login-card reveal in" aria-labelledby="loginTitle">
@@ -32,7 +41,10 @@
       </div>
 
       <button id="googleLoginBtn" class="google-login-btn" type="button">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v4.1h5.7c-.25 1.32-1.76 3.88-5.7 3.88A6.19 6.19 0 1 1 12 5.81c2.24 0 3.75.96 4.61 1.79l3.14-3.05C17.74 2.67 15.13 1.5 12 1.5A10.5 10.5 0 1 0 22.5 12c0-.7-.08-1.22-.17-1.8H12Z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#EA4335"
+            d="M12 10.2v4.1h5.7c-.25 1.32-1.76 3.88-5.7 3.88A6.19 6.19 0 1 1 12 5.81c2.24 0 3.75.96 4.61 1.79l3.14-3.05C17.74 2.67 15.13 1.5 12 1.5A10.5 10.5 0 1 0 22.5 12c0-.7-.08-1.22-.17-1.8H12Z" />
+        </svg>
         Lanjutkan dengan Google
       </button>
 
@@ -48,4 +60,5 @@
   <script src="js/data.js"></script>
   <script src="js/script.js"></script>
 </body>
+
 </html>
