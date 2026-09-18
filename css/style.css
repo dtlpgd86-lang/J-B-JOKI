@@ -727,7 +727,7 @@ section.alt{background:linear-gradient(180deg,transparent,rgba(10,21,51,.5),tran
   .tl-step{flex:1 1 33%;padding-top:34px}
   .project-grid{grid-template-columns:repeat(2,1fr)}
 }
-@media(max:600px){
+@media(max-width:600px){
   body{font-size:15.5px}
   .container{width:calc(100% - 16px);padding-inline:0}
   section{padding:50px 0}
@@ -773,6 +773,31 @@ section.alt{background:linear-gradient(180deg,transparent,rgba(10,21,51,.5),tran
   .customer-login-card{padding:2rem 1.4rem 1.6rem}
   .a-stat{padding:1rem}
   .stat-grid{grid-template-columns:1fr 1fr;gap:.7rem}
+  /* Input nyaman di HP: font 16px mencegah auto-zoom iOS, hapus backdrop-filter berat */
+  .inp,.sel,.area,.search-box .inp{font-size:16px}
+  .svc-card,.testi-card,.game-card,.cta-card{backdrop-filter:none}
+  /* Toast melebar penuh, tidak menutupi tombol WA */
+  #toastWrap{right:12px;left:12px;bottom:88px;max-width:none}
+  .toast{animation-name:toastInUp}
+  .toast.out{animation-name:toastOutUp}
+  .modal{padding:.8rem;align-items:end}
+  .modal-card{width:100%;max-height:88vh}
+  .price-table{margin-inline:-4px}
+  /* Timeline status: 2 baris tetap rapi */
+  .tl-step .tl-lbl{font-size:.7rem}
+  .faq-q{padding:.95rem 1rem;font-size:.96rem}
+  .faq-a-inner{padding:0 1rem 1.1rem 1rem}
+  .footer-bottom{justify-content:center;text-align:center}
+  .wa-banner{right:14px;bottom:14px}
+}
+@keyframes toastInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes toastOutUp{to{opacity:0;transform:translateY(24px)}}
+
+/* Amankan area tepi di iPhone notched (home indicator) */
+@supports(padding:env(safe-area-inset-bottom)){
+  @media(max-width:600px){
+    #toastWrap,.wa-banner{padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  }
 }
 
 /* Peta harga cepat di layanan */
