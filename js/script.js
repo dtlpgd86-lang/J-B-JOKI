@@ -1400,6 +1400,8 @@ async function initAdminDashboard() {
   const sidebar = $(".sidebar"), main = $(".admin-main");
   const roleLabel = $("#adminRoleLabel");
   if (roleLabel) roleLabel.textContent = isSuperAdmin() ? "Super Admin" : "Admin";
+  const resetBtn = $("#resetData");
+  if (resetBtn && !isSuperAdmin()) resetBtn.style.display = "none";
   $("#sideToggle").addEventListener("click", () => sidebar.classList.toggle("open"));
   main.addEventListener("click", (e) => { if (window.innerWidth < 1024 && sidebar.classList.contains("open") && !e.target.closest(".sidebar")) sidebar.classList.remove("open"); });
   $$(".side-nav button").forEach(b => b.addEventListener("click", () => switchView(b.dataset.view)));
