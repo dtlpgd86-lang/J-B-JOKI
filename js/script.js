@@ -812,13 +812,25 @@ function chatPanelHTML(orderId, role) {
     </form>
   </section>`;
 }
+function chatMessageKey(m) {
+  return `${m.sender}|${m.created_at}|${m.body}`;
+}
 function chatMessageHTML(message, role) {
   const own = message.sender === role;
-  return `<div class="chat-message ${own ? "own" : ""}"><small>${message.sender === "admin" ? "Admin" : "Customer"} · ${new Date(message.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</small><div>${esc(message.body)}</div></div>`;
+  return `<div class="chat-message ${own ? "own" : ""}" data-msg-key="${esc(chatMessageKey(message))}"><small>${message.sender === "admin" ? "Admin" : "Customer"} · ${new Date(message.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</small><div>${esc(message.body)}</div></div>`;
 }
 function renderChatMessages(messages, role) {
   const list = $("#chatList"); if (!list) return;
   list.innerHTML = messages.length ? messages.map(m => chatMessageHTML(m, role)).join("") : `<div class="chat-empty">Belum ada pesan. Mulai chat untuk Order #${esc($("#orderChat")?.dataset.order || "")}.</div>`;
+  list.scrollTop = list.scrollHeight;
+}
+function appendChatMessage(message, role) {
+  const list = $("#chatList"); if (!list) return;
+  const key = chatMessageKey(message);
+  const existing = list.querySelector(`[data-msg-key="${CSS.escape(key)}"]`);
+  if (existing) return; // pesan sudah pernah dirender, jangan dobel
+  const empty = list.querySelector(".chat-empty"); if (empty) empty.remove();
+  list.insertAdjacentHTML("beforeend", chatMessageHTML(message, role));
   list.scrollTop = list.scrollHeight;
 }
 async function initOrderChat(order, token, role) {
@@ -831,10 +843,12 @@ async function initOrderChat(order, token, role) {
   const channelName = `order-chat:${order.id}:${token}`;
   orderChatSubscription = supabaseClient.channel(channelName)
     .on("broadcast", { event: "new_message" }, ({ payload }) => {
-      const list = $("#chatList"); if (!list) return;
-      list.insertAdjacentHTML("beforeend", chatMessageHTML(payload, role)); list.scrollTop = list.scrollHeight;
+      appendChatMessage(payload, role); // dedupe: hanya render sekali
     }).subscribe();
   const form = $("#chatForm"); if (!form) return;
+  // Cegah submit handler menumpuk (penyebab pesan terkirim 2x/4x)
+  if (!form.dataset.chatSubmitBound) {
+    form.dataset.chatSubmitBound = "1";
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = $("#chatInput"), body = input.value.trim(); if (!body) return;
@@ -844,6 +858,7 @@ async function initOrderChat(order, token, role) {
     if (sendError) { toast(sendError.message || "Pesan gagal dikirim.", "err"); return; }
     input.value = "";
   });
+  }
 }
 
 function ratingPanelHTML(order) {
@@ -1441,6 +1456,26 @@ function seedDemo() {
   store.set(KEY.orders, demo);
 }
 
+/* ---------- Bottom nav bar (mobile) ---------- */
+const BOTTOM_NAV = [
+  { icon: "fa-house", label: "Home", href: "index.html", page: "index" },
+  { icon: "fa-list-check", label: "Layanan", href: "layanan.html", page: "layanan" },
+  { icon: "fa-anchor", label: "Order", href: "login.html?next=order.html", page: "order" },
+  { icon: "fa-magnifying-glass", label: "Status", href: "status.html", page: "status" },
+  { icon: "fa-circle-question", label: "FAQ", href: "faq.html", page: "faq" },
+];
+function injectBottomNav() {
+  if (window.matchMedia("(min-width: 821px)").matches === false) { /* selalu inject, CSS yang sembunyikan */ }
+  if (document.querySelector(".bottom-nav")) return;
+  const el = document.createElement("nav");
+  el.className = "bottom-nav";
+  el.innerHTML = `<ul>${BOTTOM_NAV.map(l => {
+    const active = l.page === PAGE ? " class=\"active\"" : "";
+    return `<li><a href="${l.href}"${active}><i class="fa-solid ${l.icon}"></i><span>${l.label}</span></a></li>`;
+  }).join("")}</ul>`;
+  document.body.appendChild(el);
+}
+
 /* =================================================================
    INIT — dispatch sesuai halaman
    ================================================================= */
@@ -1453,6 +1488,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (PAGE !== "admin" && PAGE !== "admin-login" && PAGE !== "login" && !PAGE.startsWith("wa-")) {
     injectNav();
     injectFooter();
+    injectBottomNav();
   }
   initTheme();
   observeReveals();
